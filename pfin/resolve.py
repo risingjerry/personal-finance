@@ -17,6 +17,13 @@ from .rules import book_of
 # Money that stays with the owner: repayments, withdrawals, savings sweeps, cash taken out, or a counterparty
 # named as the owner. Payees that are credit lines being repaid (the purchase was counted when it was made):
 # 携程金融 / 趣游保理 = 携程拿去花, 美团金融 = 美团月付, 中融小贷 = 抖音月付 / 放心借.
+class _Row(dict):
+ '''The columns prepare() reads. Coverage and resolve only touch record_key and payload, so the wide
+ source/dataset/locator/identity columns are merged into one small dict per record instead of keeping
+ every sqlite3.Row of the 53k-row scan alive. The JSON payload is kept as an attribute, not a key, so the
+ big strings live exactly once (a plain dict row is still accepted, tests build them that way).'''
+
+
 OWN=re.compile(r'还款|提现|零钱通|余额宝|现支|取现|取款|携程金融|趣游保理|美团金融|中融小贷|中融小额')
 
 
@@ -27,7 +34,7 @@ def own_transfer(o):
  return o['_own']
 
 
-def kind_of(o):
+def kind_of(o):  # tests only
  """Event kind from its anchor: purchase, refund, income, p2p, internal."""
  t=f"{o.get('kind_hint') or ''} {o.get('counterparty') or ''} {o.get('title') or ''} {o.get('status') or ''}"
  if o['sign']==0 or own_transfer(o) or re.search(r'充值到|转入零钱',t):return 'internal'
@@ -36,8 +43,16 @@ def kind_of(o):
  return 'purchase'
 
 
-def prepare(row,payload):
- """Normalize one evidence row with its source; None when the source skips it or it moves no money."""
+def prepare(row,payload=None):
+ """Normalize one evidence row with its source; None when the source skips it or it moves no money.
+ payload defaults to the row's own stored JSON, so latest_rows() can hand over the string without a second
+ json.loads. Nothing is memoised: one process normalizes each record once, and a per-record cache would only
+ keep every decoded payload and observation alive for the whole run (it doubled the GC cost of a resolve)."""
+ if payload is None:payload=row.payload
+ return _prepare(row,payload)
+
+
+def _prepare(row,payload):
  src=S.get(row['source'])
  spec=src.spec(row['dataset']) if src else None
  if not spec or spec.skip or not src.normalize:return None
@@ -67,14 +82,24 @@ def latest_rows(db):
  """One row per record: the copy from the most recently imported file, so a later snapshot's status
  (e.g. an order that went from unpaid to completed) replaces the earlier one."""
  rows={}
- for r in db.execute('SELECT source,dataset,record_key,payload FROM observations ORDER BY rowid'):rows[r['record_key']]=r
+ for r in db.execute('SELECT source,dataset,record_key,payload FROM observations ORDER BY rowid'):
+  if type(r) is dict:  # test fixture: rows keyed by column name
+   src,ds,rk,pl=r['source'],r['dataset'],r['record_key'],r['payload']
+  else:
+   src,ds,rk,pl=r[0],r[1],r[2],r[3]
+  try:row=rows[rk]
+  except KeyError:row=rows[rk]=_Row(source=src,dataset=ds,record_key=rk)
+  row.payload=pl  # last copy wins: a later import replaces the earlier snapshot of the same record
  return rows.values()
 
 
 def load(db,start=None,end=None):
- allobs=[]
+ allobs=[];seen=set()  # latest_rows already collapses exports; seen keeps a malformed record from costing twice
  for r in latest_rows(db):
-  try:o=prepare(r,json.loads(r['payload']))
+  k=r['record_key']
+  if k in seen:continue
+  seen.add(k)
+  try:o=prepare(r,json.loads(r.payload))
   except (ValueError,TypeError,KeyError):continue
   if o and o['at']:allobs.append(o)
  span=coverage(allobs);kept=[o for o in allobs if keep(o,span)]
@@ -223,12 +248,26 @@ def resolve(observations,ledger_end=None,ledger_start=None):
 
 def write(db,events):
  """Replace the stored ontology (events, links) with this resolution."""
- with db:
-  db.execute('DELETE FROM links');db.execute('DELETE FROM events')
-  for ev in events:
-   a=ev['anchor']
-   db.execute('INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(ev['id'],ev['kind'],ev['book'],ev.get('project'),ev.get('book_by'),
-    a['at'].isoformat() if a['at'] else None,int(a['has_time']),str(a['amount']) if a['amount'] is not None else None,a['sign'],a['account'],
-    a.get('counterparty'),(a.get('title') or '')[:200],int(bool(ev.get('refunded'))),ev.get('fee_of'),str(ev['interest']) if ev.get('interest') else None))
-   for o,role,how in ev['links']:
-    db.execute('INSERT OR IGNORE INTO links VALUES (?,?,?,?,?,?)',(ev['id'],o['key'],o['source'],o['dataset'],role,how))
+ # 34k single-row executes cost more in per-statement overhead than the commit does, so the rows are built
+ # first and handed over in one executemany each. The statements and their order are unchanged.
+ rows=[];links=[]
+ for ev in events:
+  a=ev['anchor']
+  rows.append((ev['id'],ev['kind'],ev['book'],ev.get('project'),ev.get('book_by'),
+   a['at'].isoformat() if a['at'] else None,int(a['has_time']),str(a['amount']) if a['amount'] is not None else None,a['sign'],a['account'],
+   a.get('counterparty'),(a.get('title') or '')[:200],int(bool(ev.get('refunded'))),ev.get('fee_of'),str(ev['interest']) if ev.get('interest') else None))
+  for o,role,how in ev['links']:
+   links.append((ev['id'],o['key'],o['source'],o['dataset'],role,how))
+ # Both tables are rewritten in full, so no parent row can go missing underneath a surviving child and the
+ # delete-side foreign key check can only ever pass -- but it costs a scan of events per deleted link
+ # (~110ms of a 270ms write). It is switched off for the rewrite and the constraint is verified once after.
+ db.execute('PRAGMA foreign_keys=OFF')
+ try:
+  with db:
+   db.execute('DELETE FROM links');db.execute('DELETE FROM events')
+   db.executemany('INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',rows)
+   db.executemany('INSERT OR IGNORE INTO links VALUES (?,?,?,?,?,?)',links)
+ finally:
+  db.execute('PRAGMA foreign_keys=ON')
+ bad=db.execute('SELECT COUNT(*) FROM links WHERE event NOT IN (SELECT id FROM events)').fetchone()[0]
+ if bad:raise RuntimeError(f'{bad} links reference a missing event')
