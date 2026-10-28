@@ -248,12 +248,26 @@ def resolve(observations,ledger_end=None,ledger_start=None):
 
 def write(db,events):
  """Replace the stored ontology (events, links) with this resolution."""
- with db:
-  db.execute('DELETE FROM links');db.execute('DELETE FROM events')
-  for ev in events:
-   a=ev['anchor']
-   db.execute('INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(ev['id'],ev['kind'],ev['book'],ev.get('project'),ev.get('book_by'),
-    a['at'].isoformat() if a['at'] else None,int(a['has_time']),str(a['amount']) if a['amount'] is not None else None,a['sign'],a['account'],
-    a.get('counterparty'),(a.get('title') or '')[:200],int(bool(ev.get('refunded'))),ev.get('fee_of'),str(ev['interest']) if ev.get('interest') else None))
-   for o,role,how in ev['links']:
-    db.execute('INSERT OR IGNORE INTO links VALUES (?,?,?,?,?,?)',(ev['id'],o['key'],o['source'],o['dataset'],role,how))
+ # 34k single-row executes cost more in per-statement overhead than the commit does, so the rows are built
+ # first and handed over in one executemany each. The statements and their order are unchanged.
+ rows=[];links=[]
+ for ev in events:
+  a=ev['anchor']
+  rows.append((ev['id'],ev['kind'],ev['book'],ev.get('project'),ev.get('book_by'),
+   a['at'].isoformat() if a['at'] else None,int(a['has_time']),str(a['amount']) if a['amount'] is not None else None,a['sign'],a['account'],
+   a.get('counterparty'),(a.get('title') or '')[:200],int(bool(ev.get('refunded'))),ev.get('fee_of'),str(ev['interest']) if ev.get('interest') else None))
+  for o,role,how in ev['links']:
+   links.append((ev['id'],o['key'],o['source'],o['dataset'],role,how))
+ # Both tables are rewritten in full, so no parent row can go missing underneath a surviving child and the
+ # delete-side foreign key check can only ever pass -- but it costs a scan of events per deleted link
+ # (~110ms of a 270ms write). It is switched off for the rewrite and the constraint is verified once after.
+ db.execute('PRAGMA foreign_keys=OFF')
+ try:
+  with db:
+   db.execute('DELETE FROM links');db.execute('DELETE FROM events')
+   db.executemany('INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',rows)
+   db.executemany('INSERT OR IGNORE INTO links VALUES (?,?,?,?,?,?)',links)
+ finally:
+  db.execute('PRAGMA foreign_keys=ON')
+ bad=db.execute('SELECT COUNT(*) FROM links WHERE event NOT IN (SELECT id FROM events)').fetchone()[0]
+ if bad:raise RuntimeError(f'{bad} links reference a missing event')
