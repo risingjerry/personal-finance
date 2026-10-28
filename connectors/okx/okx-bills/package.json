@@ -1,0 +1,14 @@
+{
+  "name": "okx-cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Read-only CLI for OKX C2C (P2P) order records: one login, local queries, incremental sync, CSV export",
+  "bin": { "okx": "bin/okx" },
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "doctor": "node bin/okx doctor"
+  },
+  "files": ["bin", "src"],
+  "license": "UNLICENSED"
+}

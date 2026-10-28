@@ -1,0 +1,51 @@
+{
+  "api": "mtop.taobao.idle.trade.merchant.sold.get",
+  "v": "1.0",
+  "ret": ["SUCCESS::调用成功"],
+  "data": {
+    "module": {
+      "items": [
+        {
+          "commonData": {
+            "orderId": "8001",
+            "orderStatus": "交易成功",
+            "createTime": "2026-08-01 09:00:00",
+            "paySuccessTime": "2026-08-01 09:01:00",
+            "inRefund": "false",
+            "itemId": "7101"
+          },
+          "buyerInfoVO": {
+            "name": "买家乙",
+            "phone": "13800000000",
+            "address": "示例地址"
+          },
+          "itemVO": {
+            "title": "测试商品C",
+            "itemPicUrl": "https://example.invalid/c.jpg",
+            "serviceTags": []
+          },
+          "priceVO": {
+            "auctionPrice": "20.00",
+            "totalPrice": "40.00",
+            "buyNum": "2",
+            "postFee": "0"
+          }
+        },
+        {
+          "commonData": {
+            "orderId": "8002",
+            "orderStatus": "交易关闭",
+            "createTime": "2026-08-03 12:00:00",
+            "inRefund": "true",
+            "itemId": "7102"
+          },
+          "buyerInfoVO": {"name": "买家丙"},
+          "itemVO": {"title": "测试商品D", "itemPicUrl": null},
+          "priceVO": {"auctionPrice": "5.50", "totalPrice": "5.50", "buyNum": "1"}
+        }
+      ],
+      "nextPage": "false",
+      "totalCount": 2
+    }
+  }
+}

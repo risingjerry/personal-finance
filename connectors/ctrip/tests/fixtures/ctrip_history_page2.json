@@ -1,0 +1,28 @@
+{
+  "Result": {
+    "ResultCode": 0,
+    "ResultMsg": ""
+  },
+  "ResponseStatus": {
+    "Ack": "Success"
+  },
+  "OrderEnities": [
+    {
+      "OrderID": "CTRIP-OLD-TOUR-0003",
+      "BizType": "Tuan",
+      "OrderType": "Tuan",
+      "OrderName": "示例商品：跟团游",
+      "OrderStatusName": "已完成",
+      "BookingDate": "/Date(1451606400000+0800)/",
+      "OrderTotalPrice": 1000.0,
+      "Currency": "CNY",
+      "TuanOrderItems": [
+        {
+          "ProductName": "示例商品套餐",
+          "Quantity": 1,
+          "OrderStatusName": "已完成"
+        }
+      ]
+    }
+  ]
+}

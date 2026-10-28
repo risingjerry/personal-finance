@@ -1,0 +1,96 @@
+{
+  "page0": {
+    "status": "success",
+    "data": {
+      "nextPage": 1,
+      "pageSize": 20,
+      "billListVersion": "v2",
+      "monthData": [
+        {
+          "month": "202610",
+          "incomeAmount": 0,
+          "incomeNum": 0,
+          "outcomeAmount": 2500,
+          "outcomeNum": 2,
+          "promoAmount": 120,
+          "billItemList": [
+            {
+              "tradeNo": "MT202610240001",
+              "payId": "PAY-1",
+              "tradeType": 1,
+              "orderTitle": "外卖订单",
+              "businessName": "外卖",
+              "orderAmount": 1200,
+              "orderPromoAmount": 100,
+              "payTime": "10-24 12:00",
+              "transModUnixTime": 1792814400,
+              "transLogoUrl": "https://p0.meituan.net/logo.png",
+              "orderTag": "",
+              "orderLabel": {"labelName": "", "detail": "", "url": ""},
+              "hasAward": false,
+              "moneyFlow": 2,
+              "orderType": "normal",
+              "repeatPayTag": 0
+            },
+            {
+              "tradeNo": "MT202610010002",
+              "payId": "PAY-2",
+              "tradeType": 2,
+              "orderTitle": "月付还款",
+              "businessName": "美团月付",
+              "orderAmount": 1300,
+              "orderPromoAmount": 20,
+              "payTime": "2026-10-01 08:00:00",
+              "transModUnixTime": "1790812800",
+              "transLogoUrl": "",
+              "orderTag": "",
+              "orderLabel": {"labelName": "", "detail": "", "url": ""},
+              "hasAward": false,
+              "moneyFlow": 4,
+              "orderType": "",
+              "repeatPayTag": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "page1": {
+    "status": "success",
+    "data": {
+      "nextPage": -1,
+      "pageSize": 20,
+      "billListVersion": "v2",
+      "monthData": [
+        {
+          "month": "202609",
+          "incomeAmount": 0,
+          "incomeNum": 0,
+          "outcomeAmount": 800,
+          "outcomeNum": 1,
+          "promoAmount": 0,
+          "billItemList": [
+            {
+              "tradeNo": "MT202609060003",
+              "payId": "PAY-3",
+              "tradeType": 1,
+              "orderTitle": "单车骑行",
+              "businessName": "骑车",
+              "orderAmount": 800,
+              "orderPromoAmount": 0,
+              "payTime": "09-06 12:00",
+              "transModUnixTime": 1788667200,
+              "transLogoUrl": "",
+              "orderTag": "",
+              "orderLabel": {"labelName": "", "detail": "", "url": ""},
+              "hasAward": false,
+              "moneyFlow": 2,
+              "orderType": "normal",
+              "repeatPayTag": 0
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

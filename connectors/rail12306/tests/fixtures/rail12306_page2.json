@@ -1,0 +1,66 @@
+{
+  "status": true,
+  "messages": [],
+  "data": {
+    "order_total_number": 2,
+    "OrderDTODataList": [
+      {
+        "sequence_no": "E987654321",
+        "order_date": "2026-09-21 08:30:00",
+        "ticket_total_price_page": "¥349.00",
+        "tickets": [
+          {
+            "stationTrainDTO": {
+              "station_train_code": "D321",
+              "trainDTO": {
+                "train_no": "240000D32100"
+              },
+              "from_station_name": "北京西",
+              "to_station_name": "石家庄",
+              "start_time": "07:20",
+              "arrive_time": "09:05"
+            },
+            "start_train_date_page": "2026-09-23 07:20",
+            "seat_type_name": "二等座",
+            "seat_name": "二等座",
+            "coach_no": "02",
+            "seat_no": "08F",
+            "str_ticket_price_page": "¥174.50",
+            "ticket_status_name": "已支付",
+            "ticket_type_name": "成人票",
+            "passengerDTO": {
+              "passenger_name": "李四",
+              "passenger_id_type_name": "居民身份证"
+            },
+            "trade_no": "2026092100002"
+          },
+          {
+            "stationTrainDTO": {
+              "station_train_code": "D321",
+              "trainDTO": {
+                "train_no": "240000D32100"
+              },
+              "from_station_name": "北京西",
+              "to_station_name": "石家庄",
+              "start_time": "07:20",
+              "arrive_time": "09:05"
+            },
+            "start_train_date_page": "2026-09-23 07:20",
+            "seat_type_name": "二等座",
+            "seat_name": "二等座",
+            "coach_no": "02",
+            "seat_no": "09A",
+            "str_ticket_price_page": "¥174.50",
+            "ticket_status_name": "已支付",
+            "ticket_type_name": "成人票",
+            "passengerDTO": {
+              "passenger_name": "王五",
+              "passenger_id_type_name": "居民身份证"
+            },
+            "trade_no": "2026092100003"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "schema": "cli.manifest.v1",
+  "id": "alipay",
+  "name": "alipay-cli",
+  "version": "1.0.0",
+  "description": "Read-only CLI for personal Alipay bills (browser session) plus a bridge to business-account bills (open-platform API).",
+  "kind": "cli",
+  "runtime": {
+    "kind": "node",
+    "version": ">=22",
+    "dependencies": "none"
+  },
+  "entry": {
+    "bin": "bin/alipay",
+    "symlink": "~/.local/bin/alipay",
+    "invoke": [
+      "alipay"
+    ],
+    "versionArgs": [
+      "--version"
+    ]
+  },
+  "commands": [
+    {
+      "name": "auth login",
+      "network": true,
+      "needsHuman": "QR scan",
+      "purpose": "log in once and save a cookie snapshot"
+    },
+    {
+      "name": "auth status",
+      "network": true,
+      "purpose": "session state: ok | need_login | security_challenge | browser_down"
+    },
+    {
+      "name": "doctor",
+      "network": false,
+      "purpose": "environment, data and session self-check"
+    },
+    {
+      "name": "sync",
+      "network": true,
+      "throttleSeconds": 45,
+      "purpose": "export missing years into the local store, resumable"
+    },
+    {
+      "name": "import",
+      "network": false,
+      "purpose": "parse existing Alipay zip/csv exports"
+    },
+    {
+      "name": "bills list",
+      "network": false,
+      "purpose": "query the local store"
+    },
+    {
+      "name": "merchant status",
+      "network": true,
+      "purpose": "business archive counts and coverage",
+      "engine": "native (openapi.alipay.com RSA2)"
+    },
+    {
+      "name": "merchant list",
+      "network": true,
+      "purpose": "business records by date range (kind=signcustomer|trade)",
+      "engine": "native (openapi.alipay.com RSA2)"
+    },
+    {
+      "name": "merchant sync",
+      "network": true,
+      "purpose": "archive business bills through the open-platform API (no web quota)",
+      "engine": "native (openapi.alipay.com RSA2)"
+    },
+    {
+      "name": "status",
+      "network": false,
+      "purpose": "one-screen summary: personal store, business archive, session"
+    },
+    {
+      "name": "bills summary",
+      "network": false,
+      "purpose": "aggregate by year/month/counterparty/type/status/source"
+    },
+    {
+      "name": "export",
+      "network": false,
+      "purpose": "emit json/csv/ndjson slices"
+    },
+    {
+      "name": "keepalive install|status|uninstall",
+      "network": false,
+      "purpose": "optional launchd agent that pings the record page"
+    },
+    {
+      "name": "mcp",
+      "network": false,
+      "purpose": "stdio MCP server (bills_list, bills_summary, bills_status)"
+    }
+  ],
+  "output": {
+    "protocol": "json-envelope",
+    "success": "stdout {ok:true,cmd,data,meta}",
+    "failure": "stderr {ok:false,error:{code,message,details}} exit 1"
+  },
+  "home": {
+    "dir": "~/.alipay-cli",
+    "env": "ALIPAY_CLI_HOME",
+    "private": [
+      "profile/",
+      "vault/",
+      "data/",
+      "logs/"
+    ],
+    "modes": {
+      "dirs": "0700",
+      "files": "0600"
+    }
+  },
+  "data": {
+    "store": "~/.alipay-cli/data/bills.ndjson",
+    "meta": "~/.alipay-cli/data/meta.json",
+    "raw": "~/.alipay-cli/data/raw/<year>.zip",
+    "sensitive": [
+      "~/.alipay-cli/vault/cookies.json"
+    ],
+    "business": {
+      "engine": "native (src/merchant)",
+      "home": "~/.alipay-cli/merchant",
+      "api": "open-platform bill APIs, RSA2, no web quota",
+      "config": "~/.alipay-cli/config.json (app_id + public_key); private key via private_key_file or private_key_command",
+      "note": "separate authority and separate store; never merged with the personal bills"
+    }
+  },
+  "skill": {
+    "name": "alipay-bills",
+    "source": "skills/alipay-bills",
+    "covers": [
+      "alipay-bills"
+    ]
+  },
+  "mcp": {
+    "command": [
+      "alipay",
+      "mcp"
+    ],
+    "transport": "stdio",
+    "tools": [
+      "bills_list",
+      "bills_summary",
+      "bills_status"
+    ]
+  },
+  "health": {
+    "command": [
+      "alipay",
+      "doctor",
+      "--offline"
+    ],
+    "expect": {
+      "ok": true,
+      "fail": 0
+    },
+    "fastCommand": [
+      "alipay",
+      "--version"
+    ]
+  },
+  "safety": {
+    "readOnly": true,
+    "forbidden": [
+      "pay",
+      "transfer",
+      "refund",
+      "withdraw",
+      "close-order"
+    ],
+    "notes": "All requests run inside a dedicated Chrome profile; never replay cookies from curl/requests."
+  },
+  "uninstall": {
+    "script": "scripts/uninstall.sh",
+    "safe": "keeps ~/.alipay-cli data unless --purge"
+  }
+}

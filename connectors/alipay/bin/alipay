@@ -1,0 +1,41 @@
+#!/usr/bin/env -S node --no-warnings
+'use strict';
+// alipay-cli entry point. Node >= 22, zero third-party dependencies.
+
+// Node 22 prints an experimental warning for env-proxy support at startup. stderr
+// is reserved for the JSON error envelope, so re-exec once with --no-warnings
+// (guarded by ALIPAY_CLI_REEXEC; costs ~40ms only when NODE_USE_ENV_PROXY is set).
+// Compile cache: Node >= 22.8 can cache compiled bytecode, which removes most of
+// the per-invocation parse cost for a CLI that starts dozens of times per session.
+try {
+  require('node:module').enableCompileCache?.();
+} catch {
+  /* older node: no cache, still correct */
+}
+
+if (process.env.NODE_USE_ENV_PROXY && !process.env.ALIPAY_CLI_REEXEC && !process.execArgv.includes('--no-warnings')) {
+  const { spawnSync } = require('node:child_process');
+  const child = spawnSync(process.execPath, ['--no-warnings', __filename, ...process.argv.slice(2)], {
+    stdio: 'inherit',
+    env: { ...process.env, ALIPAY_CLI_REEXEC: '1' },
+  });
+  process.exit(child.status === null ? 1 : child.status);
+}
+const { main } = require('../src/cli');
+
+// stdout carries the result; node must not linger on CDP sockets or Chrome
+// handles, so allow a short flush window and then exit deterministically.
+function exitSoon(code) {
+  process.exitCode = code;
+  const timer = setTimeout(() => process.exit(code), 1500);
+  timer.unref();
+}
+
+main(process.argv.slice(2))
+  .then(exitSoon)
+  .catch((err) => {
+    process.stderr.write(
+      `${JSON.stringify({ ok: false, cmd: null, error: { code: 'internal', message: String(err && err.message ? err.message : err) }, meta: {} })}\n`,
+    );
+    exitSoon(1);
+  });

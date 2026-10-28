@@ -1,0 +1,13 @@
+node_modules/
+data/
+logs/
+vault/
+profile/
+analysis/
+coverage/
+tmp/
+*.log
+*.zip
+*.crdownload
+.DS_Store
+.env

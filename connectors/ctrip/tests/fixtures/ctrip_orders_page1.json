@@ -1,0 +1,54 @@
+{
+  "Result": {
+    "ResultCode": 0,
+    "ResultMsg": ""
+  },
+  "ResponseStatus": {
+    "Ack": "Success",
+    "Timestamp": "2022-01-01T00:00:00+08:00"
+  },
+  "TotalCount": 3,
+  "OrderEnities": [
+    {
+      "OrderID": "CTRIP-FLIGHT-0001",
+      "BizType": "FlightDomestic",
+      "OrderType": "Flight",
+      "OrderName": "某地 → 某地",
+      "OrderStatusName": "已完成",
+      "BookingDate": "2021-01-01 08:00:00",
+      "OrderTotalPrice": "1000.00",
+      "ViewInfo": {
+        "CurrencyCode": "CNY",
+        "OrderTotalPrice": "1000.00"
+      },
+      "FlightOrderItems": [
+        {
+          "ProductName": "示例航班 经济舱",
+          "Quantity": 1,
+          "OrderStatusName": "已出票"
+        }
+      ]
+    },
+    {
+      "OrderID": "CTRIP-HOTEL-0002",
+      "BizType": "HotelDomestic",
+      "OrderType": "Hotel",
+      "OrderName": "某酒店 1 晚",
+      "OrderStatusName": "已入住",
+      "BookingDate": "2021-02-01 12:00:00",
+      "OrderTotalPrice": "200.00",
+      "ViewInfo": {
+        "CurrencyCode": "CNY",
+        "OrderTotalPrice": "200.00"
+      },
+      "HotelOrderItems": [
+        {
+          "HotelName": "某酒店",
+          "Quantity": 1,
+          "OrderStatusName": "已入住"
+        }
+      ]
+    }
+  ],
+  "Auth": "secret-echoed-ticket"
+}

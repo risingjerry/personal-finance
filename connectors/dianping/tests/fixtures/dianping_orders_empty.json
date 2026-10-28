@@ -1,0 +1,11 @@
+{
+  "code": 200,
+  "msg": "ok",
+  "data": {
+    "page": 1,
+    "pageSize": 20,
+    "total": 0,
+    "hasNext": false,
+    "list": []
+  }
+}

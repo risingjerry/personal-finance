@@ -1,0 +1,8 @@
+{
+  "status": "fail",
+  "error": {
+    "code": "RISK_SIGN",
+    "level": 2,
+    "message": "mtgsig 签名校验失败，请刷新页面后重试"
+  }
+}

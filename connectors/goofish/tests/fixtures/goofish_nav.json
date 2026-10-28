@@ -1,0 +1,17 @@
+{
+  "api": "mtop.idle.web.user.page.nav",
+  "v": "1.0",
+  "ret": [
+    "SUCCESS::调用成功"
+  ],
+  "data": {
+    "module": {
+      "base": {
+        "displayName": "测试用户",
+        "displayNick": "测试昵称",
+        "purchaseCount": 42,
+        "soldCount": 0
+      }
+    }
+  }
+}

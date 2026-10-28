@@ -1,0 +1,10 @@
+{
+  "msg": "您的网络好像不太给力，请稍后再试",
+  "code": 406,
+  "customData": {
+    "verifyPageUrl": "https://verify.meituan.com/v2/app/general_page?requestCode=test&adaptor=auto&action=spiderindefence&succCallbackUrl=https://optimus-mtsi.meituan.com/optimus/verifyResult",
+    "riskLevel": "199",
+    "requestCode": "test-request-code",
+    "verifyUrl": "https://optimus-mtsi.meituan.com/optimus/verify?request_code=test-request-code"
+  }
+}

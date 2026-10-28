@@ -1,0 +1,75 @@
+{
+  "api": "mtop.idle.web.trade.bought.list",
+  "v": "1.0",
+  "ret": ["SUCCESS::调用成功"],
+  "data": {
+    "items": [
+      {
+        "commonData": {
+          "orderId": "9001",
+          "itemId": "7001",
+          "peerUserId": "5001",
+          "orderDetailUrl": "https://www.goofish.com/order-detail?orderId=9001",
+          "tradeStatusEnum": "TRADE_SUCCESS"
+        },
+        "head": {
+          "data": {
+            "createTime": "2026-09-01 10:00:00",
+            "statusViewMsg": "交易成功",
+            "userInfo": {"userNick": "卖家甲", "userId": "5001"}
+          }
+        },
+        "content": {
+          "data": {
+            "detailInfo": {
+              "auctionTitle": "测试商品A",
+              "skuInfo": "颜色:红",
+              "auctionPic": "https://example.invalid/a.jpg",
+              "orderTags": []
+            },
+            "priceInfo": {
+              "price": "12.34",
+              "buyAmount": "2",
+              "auctionPriceDesc": "实付款"
+            }
+          }
+        },
+        "tail": {"data": {"btnList": []}}
+      },
+      {
+        "commonData": {
+          "orderId": "9002",
+          "itemId": "7002",
+          "peerUserId": "5002",
+          "orderDetailUrl": "https://www.goofish.com/order-detail?orderId=9002",
+          "tradeStatusEnum": "TRADE_SUCCESS"
+        },
+        "head": {
+          "data": {
+            "createTime": "2026-09-02 11:30:00",
+            "statusViewMsg": "交易成功",
+            "userInfo": {"userNick": "卖家乙", "userId": "5002"}
+          }
+        },
+        "content": {
+          "data": {
+            "detailInfo": {
+              "auctionTitle": "测试商品B",
+              "skuInfo": null,
+              "auctionPic": "https://example.invalid/b.jpg",
+              "orderTags": []
+            },
+            "priceInfo": {
+              "price": "99.00",
+              "buyAmount": "1",
+              "auctionPriceDesc": "实付款"
+            }
+          }
+        },
+        "tail": {"data": {"btnList": []}}
+      }
+    ],
+    "nextPage": "false",
+    "lastEndRow": "9002"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "cli.manifest.v1",
+  "id": "okx",
+  "version": "0.2.0",
+  "kind": "cli",
+  "entry": {
+    "bin": "bin/okx-bills",
+    "symlink": "~/.local/bin/okx-bills"
+  },
+  "home": {
+    "dir": "~/.okx-cli",
+    "env": "OKX_CLI_HOME"
+  },
+  "skill": {
+    "name": "okx-c2c-bills"
+  },
+  "health": {
+    "command": [
+      "okx-bills",
+      "doctor",
+      "--offline"
+    ],
+    "expect": {
+      "ok": true
+    }
+  },
+  "safety": {
+    "readOnly": true,
+    "auth": "browser-session"
+  },
+  "notes": "Read-only: /v4/c2c/order/getOrderList, /v2/asset/deposit/list-new, /v2/asset/withdraw/list. Requires logged-in dedicated Chrome profile on port 9340."
+}

@@ -1,0 +1,45 @@
+{
+  "Result": {
+    "ResultCode": 0,
+    "ResultMsg": ""
+  },
+  "ResponseStatus": {
+    "Ack": "Success"
+  },
+  "OrderEnities": [
+    {
+      "OrderID": "CTRIP-OLD-FLIGHT-0001",
+      "BizType": "FlightDomestic",
+      "OrderType": "Flight",
+      "OrderName": "某地 → 某地",
+      "OrderStatusName": "已完成",
+      "BookingDate": "/Date(1735689600000+0800)/",
+      "OrderTotalPrice": 1000.0,
+      "Currency": "CNY",
+      "FlightOrderItems": [
+        {
+          "ProductName": "示例航班 经济舱",
+          "Quantity": 1,
+          "OrderStatusName": "已出票"
+        }
+      ]
+    },
+    {
+      "OrderID": "CTRIP-OLD-HOTEL-0002",
+      "BizType": "HotelDomestic",
+      "OrderType": "Hotel",
+      "OrderName": "某酒店 1 晚",
+      "OrderStatusName": "已入住",
+      "BookingDate": "/Date(1577836800000+0800)/",
+      "OrderTotalPrice": 200.0,
+      "Currency": "CNY",
+      "HotelOrderItems": [
+        {
+          "HotelName": "某酒店",
+          "Quantity": 1,
+          "OrderStatusName": "已入住"
+        }
+      ]
+    }
+  ]
+}

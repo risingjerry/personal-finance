@@ -1,0 +1,19 @@
+{
+  "code": 200,
+  "msg": "ok",
+  "data": {
+    "page": 2,
+    "pageSize": 2,
+    "total": 3,
+    "hasNext": false,
+    "list": [
+      {
+        "orderId": "DP-TEST-1003",
+        "orderTime": "2025-10-03 18:00:00",
+        "shopName": "合成测试影院",
+        "status": "已消费",
+        "amount": "45.00"
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "code": 200,
+  "msg": "ok",
+  "data": {
+    "page": 1,
+    "pageSize": 2,
+    "total": 3,
+    "hasNext": true,
+    "list": [
+      {
+        "orderId": "DP-TEST-1001",
+        "orderTime": "2025-12-01 12:30:00",
+        "shopName": "合成测试火锅店",
+        "status": "已消费",
+        "amount": "128.00"
+      },
+      {
+        "orderId": "DP-TEST-1002",
+        "orderTime": "2025-11-02 09:15:00",
+        "shopName": "合成测试咖啡",
+        "status": "待使用",
+        "amount": "19.90"
+      }
+    ]
+  }
+}

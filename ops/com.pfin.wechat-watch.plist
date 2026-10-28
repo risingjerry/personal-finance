@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template: replace __PYTHON__, __REPO__ and __HOME__, then copy to ~/Library/LaunchAgents/ and
+     `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.pfin.wechat-watch.plist`. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.pfin.wechat-watch</string>
+  <key>ProgramArguments</key>
+  <array><string>__PYTHON__</string><string>-m</string><string>pfin.collectors.wechat_watch</string></array>
+  <key>WorkingDirectory</key><string>__REPO__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key><string>__HOME__</string>
+    <key>PATH</key><string>__HOME__/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>StandardOutPath</key><string>__HOME__/Library/Logs/pfin-wechat-watch.log</string>
+  <key>StandardErrorPath</key><string>__HOME__/Library/Logs/pfin-wechat-watch.log</string>
+</dict>
+</plist>
