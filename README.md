@@ -1,6 +1,15 @@
-# pfin — one ledger from Alipay, WeChat Pay, bank cards and shopping orders
+# Personal Finance (pfin)
 
-[简体中文](README.zh-CN.md)
+English · [简体中文](README.zh-CN.md)
+
+**A local-first, read-only personal finance CLI for China: it merges Alipay, WeChat Pay, bank SMS, Huabei and
+Taobao / JD / Ctrip orders into one ledger where each payment counts once — built for AI agents.**
+
+[![CI](https://github.com/risingjerry/personal-finance/actions/workflows/ci.yml/badge.svg)](https://github.com/risingjerry/personal-finance/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776ab.svg)
+
+![pfin demo: six made-up records from Alipay, Taobao, Ctrip and 拿去花 become four events](docs/demo.gif)
 
 One payment shows up several times on your phone: a row in the WeChat Pay bill, a row in the bank app, a push
 notification, a Taobao order. **pfin keeps every record as evidence and merges them into the real events, so each
@@ -11,15 +20,22 @@ yuan is counted once**, then sorts the events into your personal, business and i
 - **Missing stays missing.** A number it cannot get is never filled with 0; anything that does not reconcile is listed for you.
 - **Built for AI agents.** JSON output, plain-JSON rules, stable exit codes. Your agent collects and reconciles; you decide.
 
+<details><summary>The same demo as text</summary>
+
 ```console
 $ python3 -m pfin demo
 6 records -> 4 events
 
-01-05 20:15  purchase    129.00  某数码旗舰店    <- alipay-transaction + taobao-order
-01-08 12:30  p2p         200.00  张三        <- alipay-transaction
-01-09 09:00  internal    300.00  花呗        <- alipay-transaction
-01-14 12:00  purchase    420.00  某酒店       <- ctrip-naquhua-bill + ctrip-order
+01-05 20:15  purchase    129.00  某数码旗舰店  <- alipay-transaction + taobao-order
+01-08 12:30  p2p         200.00  张三          <- alipay-transaction
+01-09 09:00  internal    300.00  花呗          <- alipay-transaction
+01-14 12:00  purchase    420.00  某酒店        <- ctrip-naquhua-bill + ctrip-order
+
+personal: internal 300.00  p2p 200.00  purchase 549.00
+needs your decision: 某酒店 420.00, 张三 200.00, 某数码旗舰店 129.00
 ```
+
+</details>
 
 The Alipay payment and the Taobao order are one purchase. The Ctrip hotel order and the 拿去花 (Ctrip credit) bill two
 days later are one purchase. The Huabei repayment is money moving between your own accounts, so it is not spending.
@@ -30,10 +46,12 @@ The transfer to 张三 waits for you to say which book it belongs to.
 Needs Python 3.11+ (standard library only). macOS for the connectors and collectors; the merge engine runs anywhere.
 
 ```bash
-git clone https://github.com/risingjerry/china-finance-agent-cli.git
-cd china-finance-agent-cli
+git clone https://github.com/risingjerry/personal-finance.git
+cd personal-finance
 python3 -m pfin demo                      # made-up data in a temp folder; touches nothing real
 ```
+
+You should see `6 records -> 4 events` followed by the four merged events from the demo above.
 
 With your own data (private folder: `PFIN_HOME`, default `~/Library/Application Support/personal-finance`):
 
@@ -106,7 +124,7 @@ The repo ships its agent manual: [`AGENTS.md`](AGENTS.md) (also loaded by Claude
 skill at [`skills/pfin/SKILL.md`](skills/pfin/SKILL.md).
 
 ```bash
-npx skills add risingjerry/china-finance-agent-cli      # or copy skills/pfin to ~/.claude/skills/
+npx skills add risingjerry/personal-finance      # or copy skills/pfin to ~/.claude/skills/
 ```
 
 Then ask:
@@ -138,13 +156,21 @@ No. Logins are QR codes or captchas you complete yourself. Cookies read from you
 **Is it safe to let an AI agent run it?**
 Every command is read-only and outputs JSON. Secrets are never printed, logged or put in command-line arguments.
 
-## Contributing
+## Uninstall
 
-Bug reports and new connectors are welcome: [`CONTRIBUTING.md`](CONTRIBUTING.md). Security issues: [`SECURITY.md`](SECURITY.md).
+Delete the clone. If you installed the scheduled job, run `python3 -m pfin sync --uninstall` first. Your data stays in
+`~/Library/Application Support/personal-finance` (and the connectors' state in `~/Library/Application Support/pfin-connectors`)
+until you delete those folders; saved logins are Keychain items named `pfin-session`.
+
+## Support and contributing
+
+Questions and bug reports: [GitHub Issues](https://github.com/risingjerry/personal-finance/issues). New connectors are welcome: [`CONTRIBUTING.md`](CONTRIBUTING.md). Security issues: [`SECURITY.md`](SECURITY.md).
 
 Platform names and logos belong to their owners; this project is not affiliated with any of them.
 
-If pfin saved you an evening of spreadsheet work, a star helps others find it.
+If pfin saved you an evening of spreadsheet work, a ⭐ helps others find it.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=risingjerry/personal-finance&type=Date)](https://star-history.com/#risingjerry/personal-finance&Date)
 
 ## License
 

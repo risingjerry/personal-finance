@@ -1,7 +1,7 @@
 """`pfin demo`: a month of made-up records in a throwaway folder, merged into events. Shows what pfin does
 without touching any real data: six records from Alipay, Taobao, Ctrip and 拿去花 become four events, each
 money movement counted once."""
-import json,tempfile
+import json,tempfile,unicodedata
 from pathlib import Path
 from . import config,sources
 
@@ -22,6 +22,11 @@ ROWS={
 }
 
 
+def _pad(text,width):
+ """Left-justify by terminal width: CJK characters take two columns."""
+ return text+' '*max(0,width-sum(2 if unicodedata.east_asian_width(c) in 'WF' else 1 for c in text))
+
+
 def run():
  home=Path(tempfile.mkdtemp(prefix='pfin-demo-'))
  (home/'config.json').write_text(json.dumps({'timezone':'Asia/Shanghai','owner':['示例用户']},ensure_ascii=False))
@@ -34,10 +39,12 @@ def run():
  from .report import report
  db=connect();ingest(db)
  obs,end,start=load(db,None,None);events,unmatched=resolve(obs,end,start)
- print(f'{len(obs)} records -> {len(events)} events  (data: {home})\n')
+ print(f'{len(obs)} records -> {len(events)} events\n')
  for e in sorted(events,key=lambda e:e['anchor']['at']):
   a=e['anchor'];seen=' + '.join(o['dataset'] for o,_,_ in e['links'])
-  print(f"{a['at']:%m-%d %H:%M}  {e['kind']:9} {a['amount']:>8}  {a.get('counterparty') or '':8}  <- {seen}")
+  print(f"{a['at']:%m-%d %H:%M}  {e['kind']:9} {a['amount']:>8}  {_pad(a.get('counterparty') or '',14)}<- {seen}")
  r=report(events,unmatched,obs)
- print('\n'+json.dumps({k:v for k,v in r.items() if k not in ('review','per_source')},ensure_ascii=False,indent=1))
+ for book,totals in r['books'].items():print(f"\n{book}: "+'  '.join(f"{k.removesuffix('_out')} {v}" for k,v in sorted(totals.items())))
+ print('needs your decision: '+', '.join(f"{c['counterparty']} {c['amount']}" for c in r['confirm_book_for']))
+ print(f'\nthrowaway data folder: {home}')
  return events

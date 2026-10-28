@@ -1,6 +1,15 @@
-# pfin：把支付宝、微信支付、银行卡和购物订单合成一本账
+# Personal Finance（pfin）
 
-[English](README.md)
+[English](README.md) · 简体中文
+
+**本地优先、只读的个人记账命令行工具：把支付宝、微信支付、银行短信、花呗和淘宝 / 京东 / 携程订单合成一本账，
+一笔钱只算一次，为 AI 代理而设计。**
+
+[![CI](https://github.com/risingjerry/personal-finance/actions/workflows/ci.yml/badge.svg)](https://github.com/risingjerry/personal-finance/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776ab.svg)
+
+![pfin 演示：支付宝、淘宝、携程、拿去花的 6 条编造记录合成 4 笔事件](docs/demo.gif)
 
 一笔钱在你手机里会被看到好几次：微信账单一行、银行 App 一行、一条支付通知、淘宝一张订单。
 **pfin 把这些记录原样留作证据，再合成真实发生的事件，一笔钱只算一次**，然后按你写的规则分到个人、生意、投资几本账。
@@ -10,15 +19,22 @@
 - **缺了就是缺了**：拿不到的数字不填 0，对不上的列出来给你看。
 - **给 AI 代理用的**：输出 JSON，规则是普通 JSON 文件，退出码固定。代理帮你采集、对账，你只做决定。
 
+<details><summary>同样的演示（文字版）</summary>
+
 ```console
 $ python3 -m pfin demo
 6 records -> 4 events
 
-01-05 20:15  purchase    129.00  某数码旗舰店    <- alipay-transaction + taobao-order
-01-08 12:30  p2p         200.00  张三        <- alipay-transaction
-01-09 09:00  internal    300.00  花呗        <- alipay-transaction
-01-14 12:00  purchase    420.00  某酒店       <- ctrip-naquhua-bill + ctrip-order
+01-05 20:15  purchase    129.00  某数码旗舰店  <- alipay-transaction + taobao-order
+01-08 12:30  p2p         200.00  张三          <- alipay-transaction
+01-09 09:00  internal    300.00  花呗          <- alipay-transaction
+01-14 12:00  purchase    420.00  某酒店        <- ctrip-naquhua-bill + ctrip-order
+
+personal: internal 300.00  p2p 200.00  purchase 549.00
+needs your decision: 某酒店 420.00, 张三 200.00, 某数码旗舰店 129.00
 ```
+
+</details>
 
 支付宝那笔付款和淘宝订单是同一次消费；携程酒店订单和两天后拿去花的账单是同一次消费；花呗还款是自己账户之间的钱，
 不算花销；转给张三的钱等你说一句归哪本账。
@@ -28,10 +44,12 @@ $ python3 -m pfin demo
 需要 Python 3.11+（只用标准库）。连接器和采集器只支持 macOS；合并引擎哪里都能跑。
 
 ```bash
-git clone https://github.com/risingjerry/china-finance-agent-cli.git
-cd china-finance-agent-cli
+git clone https://github.com/risingjerry/personal-finance.git
+cd personal-finance
 python3 -m pfin demo                      # 编造的数据，放在临时目录，不碰任何真实数据
 ```
+
+你会看到 `6 records -> 4 events`，后面是上面演示里那四笔合并后的事件。
 
 用你自己的数据（私有目录 `PFIN_HOME`，默认 `~/Library/Application Support/personal-finance`）：
 
@@ -103,7 +121,7 @@ python3 -m pfin coverage                                   # 每个账户由哪�
 [`skills/pfin/SKILL.md`](skills/pfin/SKILL.md)。
 
 ```bash
-npx skills add risingjerry/china-finance-agent-cli      # 或者把 skills/pfin 复制到 ~/.claude/skills/
+npx skills add risingjerry/personal-finance      # 或者把 skills/pfin 复制到 ~/.claude/skills/
 ```
 
 然后直接说：
@@ -134,13 +152,21 @@ npx skills add risingjerry/china-finance-agent-cli      # 或者把 skills/pfin 
 **让 AI 代理来跑安全吗？**
 所有命令都是只读的、输出 JSON。密钥不会被打印、写日志或放进命令行参数。
 
-## 参与
+## 卸载
 
-欢迎报 bug、写新连接器：[`CONTRIBUTING.md`](CONTRIBUTING.md)。安全问题：[`SECURITY.md`](SECURITY.md)。
+删掉仓库目录即可。装过定时任务的话，先运行 `python3 -m pfin sync --uninstall`。你的数据在
+`~/Library/Application Support/personal-finance`（连接器自己的状态在 `~/Library/Application Support/pfin-connectors`），
+删掉这两个目录才会清除；保存的登录在钥匙串里，名字是 `pfin-session`。
+
+## 支持与参与
+
+有问题或发现 bug，请到 [GitHub Issues](https://github.com/risingjerry/personal-finance/issues)。也欢迎写新连接器：[`CONTRIBUTING.md`](CONTRIBUTING.md)。安全问题：[`SECURITY.md`](SECURITY.md)。
 
 各平台的名称和商标归其所有者；本项目与它们没有关联。
 
-如果 pfin 帮你省了一晚上对表格的时间，点个 Star 能让更多人找到它。
+如果 pfin 帮你省了一晚上对表格的时间，点个 ⭐ 能让更多人找到它。
+
+[![Star History Chart](https://api.star-history.com/svg?repos=risingjerry/personal-finance&type=Date)](https://star-history.com/#risingjerry/personal-finance&Date)
 
 ## 许可
 

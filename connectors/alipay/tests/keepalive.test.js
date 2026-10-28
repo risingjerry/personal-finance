@@ -4,11 +4,11 @@ const assert = require('node:assert/strict');
 const { buildPlist, LABEL, DEFAULT_INTERVAL } = require('../src/keepalive');
 
 test('keepalive plist carries the exact agent command and interval', () => {
-  const xml = buildPlist({ home: '/tmp/home', intervalSeconds: 600, logPath: '/tmp/home/logs/keepalive.log' });
+  const xml = buildPlist({ home: '/tmp/kh', intervalSeconds: 600, logPath: '/tmp/kh/logs/keepalive.log' });
   assert.match(xml, new RegExp(`<string>${LABEL}</string>`));
   assert.match(xml, /<key>StartInterval<\/key>\s*<integer>600<\/integer>/);
   assert.match(xml, /<string>auth<\/string>\s*<string>status<\/string>\s*<string>--launch<\/string>/);
-  assert.match(xml, /<string>\/tmp\/home<\/string>/);
+  assert.match(xml, /<string>\/tmp\/kh<\/string>/);
   assert.match(xml, /<key>RunAtLoad<\/key>\s*<true\/>/);
 });
 

@@ -5,7 +5,7 @@ Thanks for helping. Small, focused pull requests are easiest to review.
 ## Setup
 
 ```bash
-git clone https://github.com/risingjerry/china-finance-agent-cli.git && cd china-finance-agent-cli
+git clone https://github.com/risingjerry/personal-finance.git && cd personal-finance
 python3 -m pfin demo
 python3 -m unittest discover -s tests
 for d in connectors/*/tests; do python3 -m unittest discover -s "$d" -t .; done

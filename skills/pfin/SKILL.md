@@ -5,7 +5,7 @@ description: "Personal finance from records you already have: merge Alipay, WeCh
 
 # pfin
 
-Repository: https://github.com/risingjerry/china-finance-agent-cli (run commands from the clone).
+Repository: https://github.com/risingjerry/personal-finance (run commands from the clone).
 
 ## First look
 
