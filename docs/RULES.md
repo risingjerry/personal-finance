@@ -29,7 +29,8 @@ sync-state.json     pfin sync 记下每个外部采集器上次运行的时间
  "plugins": ["mybiz.sources"],
  "plugin_paths": ["~/code/mybiz-pfin"],
  "connectors": {
-  "alipay-work": {"connector": "alipay", "args": ["--home", "~/.alipay-cli-work"], "account": "alipay:work"}
+  "alipay-work": {"connector": "alipay", "env": {"ALIPAY_CLI_HOME": "~/.alipay-cli-work", "ALIPAY_CLI_CDP_PORT": "9334"},
+                  "account": "alipay:work"}
  },
  "connector_paths": ["~/code/mybiz-connectors"],
  "sync": {
@@ -51,7 +52,7 @@ sync-state.json     pfin sync 记下每个外部采集器上次运行的时间
 - `accounts`：只为一本账服务的账户，事件默认归那本账。
 - `cards`：读屏列表不显示卡号时，用哪个后四位。
 - `plugins`：额外的数据源模块（如自己公司的系统）。
-- `connectors`：用别的参数跑同一个连接器、输出到另一个文件夹（比如第二个支付宝账号），以及这个文件夹的记录记到哪个账户。文件夹名就是连接器名时不用写。
+- `connectors`：用别的参数跑同一个连接器、输出到另一个文件夹（比如第二个支付宝账号），以及这个文件夹的记录记到哪个账户。文件夹名就是连接器名时不用写。`args` 只加在拉取上；`env` 对这个文件夹的每个动作（登录、保活、状态、拉取）都生效，第二个账号要用自己的目录和浏览器端口时写在这里。
 - `connector_paths`：框架之外的连接器（比如自己公司的支付通道）所在的目录。
 - `sync`：`pfin sync` 每轮做什么。`connectors` 里每个文件夹：按连接器声明的间隔保活（`"keepalive": false` 关掉，比如要扫码的平台），`fetch_hours` 小时拉一次，`args` 是额外的拉取参数；登录失效会列在 `needs_login`，不算失败。`commands` 是其他外部命令，每个有自己的最小间隔（分钟）；`{raw}`、`{home}` 会换成私有目录。`wechat_notices` 为 true 时由 sync 读微信卡片（没开实时监听时用）。加新数据源只改这里，不新增定时任务。
 

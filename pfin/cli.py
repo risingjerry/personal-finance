@@ -110,7 +110,7 @@ def cmd_status(a):
  code=0
  for n in names:
   key,_=connect.folder(n);print(f'== {n}',flush=True)
-  code=max(code,connect.run(key,'status',*(['--online'] if a.online else [])).returncode)
+  code=max(code,connect.run(key,'status',*(['--online'] if a.online else []),extra_env=connect.folder_env(n)).returncode)
  sys.exit(code)
 
 
@@ -122,7 +122,7 @@ def cmd_demo(a):
 def cmd_login(a):
  from . import connect
  key,_=connect.folder(a.folder)
- sys.exit(connect.run(key,'login').returncode)
+ sys.exit(connect.run(key,'login',extra_env=connect.folder_env(a.folder)).returncode)
 
 
 def main(argv=None):

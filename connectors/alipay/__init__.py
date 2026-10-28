@@ -130,7 +130,7 @@ def status(args):
 
 def keepalive(args) -> int:
     result = _json(_node(args, "auth", "status", timeout=120))
-    state = ((result.get("data") or {}).get("state")) or (result.get("error") or {}).get("code") or "unknown"
+    state = ((result.get("data") or {}).get("session")) or (result.get("error") or {}).get("code") or "unknown"
     print(json.dumps({"connector": "alipay", "status": state}) if getattr(args, "json", False) else f"支付宝登录：{state}")
     return 0 if state == "ok" else 3
 

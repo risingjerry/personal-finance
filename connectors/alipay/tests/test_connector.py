@@ -33,6 +33,12 @@ class AlipayConnectorTests(unittest.TestCase):
         self.assertEqual((row["source"], row["direction"], row["amount"], row["extra"]["trade_no"]), ("alipay", "out", "12.50", BILL["trade_no"]))
         self.assertTrue(list(out.glob("alipay-bills-*.json")))
 
+    def test_keepalive_reads_the_session_field(self):
+        for session, want in (("ok", 0), ("need_login", 3), ("browser_down", 3)):
+            reply = proc(json.dumps({"ok": True, "cmd": "auth.status", "data": {"session": session}}))
+            with mock.patch("connectors.alipay._node", return_value=reply), mock.patch("sys.stdout"):
+                self.assertEqual(main(CONNECTOR, ["keepalive"]), want, session)
+
     def test_merchant_funds_use_their_own_file_names(self):
         ok = json.dumps({"ok": True, "data": {}})
         listed = json.dumps({"ok": True, "data": {"items": [FUND]}})

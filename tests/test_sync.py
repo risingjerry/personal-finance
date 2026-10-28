@@ -34,12 +34,12 @@ FOUND={'jd':{'module':'connectors.jd','path':'/x','manifest':{'keepalive_hours':
 class ConnectorScheduleTests(unittest.TestCase):
  def setUp(self):
   self.c=_env.isolated(sync={'connectors':{'jd':{'fetch_hours':24},'alipay-work':{'keepalive':False,'fetch_hours':24}}},
-   connectors={'alipay-work':{'connector':'alipay','args':['--home','~/w'],'account':'alipay:work'}})
+   connectors={'alipay-work':{'connector':'alipay','args':['--home','~/w'],'env':{'ALIPAY_CLI_HOME':'~/w'},'account':'alipay:work'}})
   self.codes={}
 
  def steps(self,**kw):
   def step(name,argv,timeout=0,env=None):
-   code=self.codes.get(name,0);return {'step':name,'ok':code==0,'code':code,'argv':argv}
+   code=self.codes.get(name,0);return {'step':name,'ok':code==0,'code':code,'argv':argv,'env':env}
   with mock.patch.object(sync,'_step',side_effect=step),mock.patch.object(sync.connect,'discover',return_value=FOUND):
    return [s for s in sync.run(**kw)['steps'] if s['step'] not in ('bank_sms','import','resolve','library')]
 
@@ -48,6 +48,8 @@ class ConnectorScheduleTests(unittest.TestCase):
   self.assertEqual([s['step'] for s in got],['jd keepalive','jd fetch','alipay-work fetch'])
   self.assertEqual(got[1]['argv'][-2:],['--out',str(self.c.raw/'jd')])
   self.assertEqual(got[2]['argv'][2:],['connectors.alipay','fetch','--out',str(self.c.raw/'alipay-work'),'--home',str(Path.home()/'w')])
+  self.assertEqual(got[2]['env']['ALIPAY_CLI_HOME'],str(Path.home()/'w'))
+  self.assertNotEqual(got[0]['env'].get('ALIPAY_CLI_HOME'),str(Path.home()/'w'))  # jd keeps its own
   self.assertEqual(self.steps(),[])  # nothing due again within the hour
 
  def test_lost_login_is_reported_and_stops_the_fetch_until_keepalive_sees_it_back(self):

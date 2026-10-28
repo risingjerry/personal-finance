@@ -43,13 +43,20 @@ def folder(name):
  return entry.get('connector',name),[os.path.expanduser(a) for a in entry.get('args',[])]
 
 
-def command(key,verb,*args,found=None):
+def folder_env(name):
+ """Environment for every verb run for a raw folder: config.json "connectors" -> "env" (e.g. a second Alipay
+ account's own home and browser port, so its login and keepalive never touch the first account)."""
+ entry=cfg().connectors.get(name) or {}
+ return {k:os.path.expanduser(str(v)) for k,v in (entry.get('env') or {}).items()}
+
+
+def command(key,verb,*args,found=None,extra_env=None):
  """(argv, env) for one verb of one connector."""
  info=(found or discover())[key]
- env={**os.environ,'PYTHONPATH':os.pathsep.join(dict.fromkeys([str(ROOT),info['path']]+[p for p in os.environ.get('PYTHONPATH','').split(os.pathsep) if p]))}
+ env={**os.environ,**(extra_env or {}),'PYTHONPATH':os.pathsep.join(dict.fromkeys([str(ROOT),info['path']]+[p for p in os.environ.get('PYTHONPATH','').split(os.pathsep) if p]))}
  return [sys.executable,'-m',info['module'],verb,*args],env
 
 
-def run(key,verb,*args,capture=False,timeout=None):
- argv,env=command(key,verb,*args)
+def run(key,verb,*args,capture=False,timeout=None,extra_env=None):
+ argv,env=command(key,verb,*args,extra_env=extra_env)
  return subprocess.run(argv,cwd=ROOT,env=env,capture_output=capture,text=True,timeout=timeout,check=False)

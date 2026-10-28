@@ -68,7 +68,7 @@ def _connector(name,plan,state,clock,now,found):
  key,args=connect.folder(name);st=state.setdefault('connector:'+name,{});steps=[]
  if key not in found:return [{'step':name,'ok':False,'detail':f'no connector {key}'}]
  def step(verb,*extra,timeout=300):
-  argv,env=connect.command(key,verb,*extra,found=found)
+  argv,env=connect.command(key,verb,*extra,found=found,extra_env=connect.folder_env(name))
   r=_step(f'{name} {verb}',argv,timeout=timeout,env=env)
   if r.get('code')==NEEDS_LOGIN:r.update(ok=True,needs_login=True);st['needs_login']=True
   elif r['ok']:st['needs_login']=False
