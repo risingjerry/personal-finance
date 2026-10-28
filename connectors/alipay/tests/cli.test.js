@@ -144,7 +144,9 @@ test('import with no matching files is a usage error', () => {
 
 test('doctor --offline reports checks and never needs the network', () => {
   const home = tempHome();
-  const res = spawnSync(process.execPath, [BIN, 'doctor', '--offline', '--port', '1'], { env: { ...process.env, ALIPAY_CLI_HOME: home }, encoding: 'utf8', timeout: 60000 });
+  // Any existing file stands in for Chrome, so the check passes on machines without it (CI).
+  const env = { ...process.env, ALIPAY_CLI_HOME: home, ALIPAY_CLI_CHROME: process.execPath };
+  const res = spawnSync(process.execPath, [BIN, 'doctor', '--offline', '--port', '1'], { env, encoding: 'utf8', timeout: 60000 });
   const json = JSON.parse(res.stdout.trim());
   assert.equal(json.cmd, 'doctor');
   const names = json.data.checks.map((c) => c.name);
