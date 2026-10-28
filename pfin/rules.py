@@ -27,11 +27,49 @@ def _holds(when,o):
  return all(re.search(pat,str((o.get('fields') or {}).get(k) or '')) for k,pat in (when.get('field') or {}).items())
 
 
+def _hint(when):
+ """Cheap keys a rule's conditions imply, so most rules are skipped before any condition is evaluated."""
+ return (when.get('account'),when.get('sign'))
+
+
+def _pack(when):
+ """One rule as a closure over its condition tuple: the dict lookups and the text lower() happen once per rule,
+ not once per (event, rule). Behaviour is _holds(), minus the re.I-free re.search."""
+ acc,sgn=_hint(when)
+ ds,txt=when.get('dataset'),when.get('text') and when['text'].lower()
+ rnd=Decimal(str(when['round'])) if 'round' in when else None
+ fld=tuple((k,re.compile(p)) for k,p in (when.get('field') or {}).items())
+ def packed(o):
+  if acc is not None and o['account']!=acc:return False
+  if sgn is not None and o['sign']!=sgn:return False
+  if rnd is not None and (o['amount'] or 0)%rnd:return False
+  if txt is not None:
+   t=o.get('_text')
+   if t is None:o['_text']=t=f"{o.get('counterparty') or ''} {o.get('title') or ''}".lower()  # once per observation
+   if txt not in t:return False
+  if ds is not None and o['dataset']!=ds:return False
+  if fld:
+   f=o.get('fields') or {}
+   return all(rx.search(str(f.get(k) or '')) for k,rx in fld)
+  return True
+ return packed
+
+
+_PACKED={}
+def packed(when):
+ """The closure for one rule's `when`: a rule is read once a run but tested against every event."""
+ k=repr(sorted(when.items()))
+ p=_PACKED.get(k)
+ if p is None:p=_PACKED[k]=_pack(when)
+ return p
+
+
 def matches(when,ev):
  """Plain rules test the event's anchor. A rule naming a dataset or a field tests each linked observation, all
  conditions on the same one: e.g. the work-account leg of a move from personal Alipay into the own shop."""
- if 'dataset' in when or 'field' in when:return any(_holds(when,l[0]) for l in ev['links'])
- return _holds(when,ev['anchor'])
+ fn=packed(when)
+ if 'dataset' in when or 'field' in when:return any(fn(l[0]) for l in ev['links'])
+ return fn(ev['anchor'])
 
 
 def loan_interest(loan,at):
@@ -53,6 +91,21 @@ def loan_interest(loan,at):
   bal-=x-it
 
 
+_RULES={}
+def _compiled(c):
+ """The owner's rules prepared once per config: each rule's closure, its implied keys and its verdict text. 47 rules
+ tested against 13k events is the read path's largest single cost, so the per-(event,rule) dict work is hoisted out."""
+ got=_RULES.get(id(c))
+ if got is not None and got[0] is c:return got[1]
+ out=[]
+ for n,r in enumerate(c.rules):
+  when=r.get('when') or {}
+  fn=packed(when)
+  out.append((fn,_hint(when)+(('dataset' in when or 'field' in when),),r,f"rule {n+1}"+(f": {r['note'][:40]}" if r.get('note') else '')))
+ _RULES.clear();_RULES[id(c)]=(c,out)
+ return out
+
+
 def book_of(ev):
  """(book, project, why). Order: override by id > owner rule > account default > personal. A rule or override
  may also set the event kind (e.g. a credit repayment is internal) or a loan schedule (interest is split out)."""
@@ -63,11 +116,17 @@ def book_of(ev):
    x=c.overrides[i]
    if x.get('kind'):ev['kind']=x['kind']
    return x.get('book','personal'),x.get('project'),'override: '+x.get('evidence','owner')
- for n,r in enumerate(c.rules):
-  if matches(r.get('when') or {},ev):
-   if r.get('kind'):ev['kind']=r['kind']
-   if r.get('loan') and ev['anchor']['at']:ev['interest']=loan_interest(r['loan'],ev['anchor']['at'])
-   return r.get('book','personal'),r.get('project'),f"rule {n+1}"+(f": {r['note'][:40]}" if r.get('note') else '')
+ anchor=ev['anchor']
+ for fn,(acc,sgn,per_leg),r,why in _compiled(c):
+  # Skip on the implied keys first: a rule that names an account, a sign or a field cannot hold for this event.
+  if acc is not None and anchor['account']!=acc and not per_leg:continue
+  if sgn is not None and anchor['sign']!=sgn and not per_leg:continue
+  if per_leg:
+   if not any(fn(l[0]) for l in ev['links']):continue
+  elif not fn(anchor):continue
+  if r.get('kind'):ev['kind']=r['kind']
+  if r.get('loan') and anchor['at']:ev['interest']=loan_interest(r['loan'],anchor['at'])
+  return r.get('book','personal'),r.get('project'),why
  acct=c.accounts.get(ev['anchor']['account'] or '')
  if acct and acct.get('book'):return acct['book'],acct.get('project'),'account default'
  return 'personal',None,'default'

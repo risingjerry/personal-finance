@@ -51,7 +51,7 @@ def cmd_coverage(a):
  for r in db.execute('SELECT source,dataset,record_key,payload FROM observations'):
   if r['record_key'] in seen:continue
   seen.add(r['record_key'])
-  try:o=prepare(r,json.loads(r['payload']))
+  try:o=prepare(r,json.loads(getattr(r,'payload',None) or r['payload']))
   except (ValueError,TypeError,KeyError):continue
   if o and o['at']:obs.append(o)
  by=collections.defaultdict(lambda:[None,None,0])
