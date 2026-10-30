@@ -29,6 +29,20 @@ alipay bills summary --by month --from 2025 # 有数据就直接答
 | 「某某商户 / 某个商品 / 大于 100 的支出」 | `alipay bills list --q 关键词 [--min 100] [--direction out]` | 报 `total` 与关键几笔（日期/对方/金额） |
 | 「导一份账单给我」 | `alipay export --format csv --from 2025 --out <path>` | 回文件路径 + 行数 + sha256 |
 
+## 「某人付钱了吗 / 今天到账没」→ 第一条命令必须是 `merchant today`
+
+商户账单 `merchant list/sync` 是 **T+1，只到昨天**，查今天一定查不到。当天用实时接口：
+
+```bash
+alipay merchant today                 # 今天的收款+转账/充值/提现+余额，并和昨晚账单余额对账
+alipay merchant query --kind sell --from 2026-10-30 --to 2026-10-31   # 只看收款，[from,to) 北京日期
+alipay merchant trade --trade-no <支付宝交易号>                          # 有单号时查单笔
+```
+
+- 收款码收款也在 `sell` 里。`latest_sell_at` 是接口里最晚一笔，明显早于现在就要提醒老板（可能有延迟）。
+- `unexplained_cents` ≠ 0：余额变了但没有对应记录（例如手机上转入余额），要老板看 App 截图，不能说「没付」。
+- 回答「没找到」之前，必须说清查了哪几个接口、覆盖到几点。
+
 ## 商户账单（同一个账号的商家面）：官方 API，不碰网页、不用扫码
 
 ```bash
