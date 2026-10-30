@@ -120,4 +120,39 @@ async function trade(ctx) {
   return { cmd: 'merchant.trade', data: res };
 }
 
-module.exports = { status, sync, list, summary, balance, query, trade };
+/**
+ * Everything that landed since the last archived day, from the live APIs, plus a
+ * balance check against the archive. Bills are T+1; `query` is the only same-day
+ * source, so "did X pay me today" must start here, not at `list`.
+ */
+async function today(ctx) {
+  const funds = loadKind(ctx.home, 'funds').records;
+  const lastFund = funds.length ? funds[funds.length - 1] : null;
+  const beijing = (d) => new Date(d.getTime() + 8 * 3600000).toISOString().slice(0, 10);
+  const day = ctx.flags.from ? String(ctx.flags.from) : beijing(new Date());
+  const next = beijing(new Date(Date.parse(`${day}T00:00:00Z`) + 86400000 - 8 * 3600000 + 86400000));
+  const sells = (await queryOnline({ kind: 'sell', from: day, to: next })).records;
+  const moves = {};
+  for (const k of ['transfer', 'deposit', 'withdraw']) moves[k] = (await queryOnline({ kind: k, from: day, to: next })).records;
+  const bal = (await queryOnline({ kind: 'balance' })).payload;
+  const cents = (s) => toCents(s);
+  const sellNet = sells.filter((r) => r.trade_status === '成功').reduce((n, r) => n + cents(r.total_amount) - cents(r.service_fee) - cents(r.refund_amount), 0);
+  const archivedThrough = lastFund ? lastFund.occurred_at.slice(0, 10) : null;
+  const gap = lastFund && archivedThrough < day ? cents(bal.total_amount) - cents(lastFund.balance) - sellNet : null;
+  return {
+    cmd: 'merchant.today',
+    data: {
+      date: day,
+      archived_through: archivedThrough,
+      latest_sell_at: sells.reduce((m, r) => (r.gmt_pay > m ? r.gmt_pay : m), ''),
+      sells: sells.map((r) => ({ paid_at: r.gmt_pay, amount: r.total_amount, payer: r.other_account, order: r.merchant_order_no, title: r.goods_title, status: r.trade_status })),
+      transfers: moves,
+      balance: bal.total_amount,
+      balance_at_archive_end: lastFund ? lastFund.balance : null,
+      unexplained_cents: gap,
+      unexplained_note: gap ? 'balance rose/fell by this much with no matching sell/transfer/deposit/withdraw record; check the Alipay app' : null,
+    },
+  };
+}
+
+module.exports = { status, sync, list, summary, balance, query, trade, today };
