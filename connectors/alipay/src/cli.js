@@ -36,7 +36,9 @@ COMMANDS
   merchant list [--from --to] [--kind funds|trade] [--q TEXT] [--limit --offset]
   merchant summary [--by month|day|counterparty|type] [--from --to]
   merchant balance                   Live account balance
-  merchant today [--from DATE]       Same-day receipts (live) + balance check vs archive; start here for "did X pay me"
+  merchant receipts [--q TEXT] [--amount CNY] [--from DATE --to DATE]
+                                     Check incoming payments: fill funds-bill gaps (last 30 days) + partial live evidence
+  merchant today [--from DATE]       Partial live APIs only; use receipts for "did X pay me"
   merchant query --kind sell|transfer|deposit|withdraw --from --to
                                      Paginated online records (<=31-day windows)
   merchant trade --trade-no T [--refund-no R]
@@ -137,6 +139,7 @@ function resolveRoute(positionals) {
     'merchant summary': () => require('./commands/merchant').summary,
     'merchant balance': () => require('./commands/merchant').balance,
     'merchant today': () => require('./commands/merchant').today,
+    'merchant receipts': () => require('./commands/merchant-receipts').run,
     'merchant query': () => require('./commands/merchant').query,
     'merchant trade': () => require('./commands/merchant').trade,
     status: () => require('./commands/status').run,
@@ -148,7 +151,7 @@ function resolveRoute(positionals) {
     auth: ['login', 'status'],
     bills: ['list', 'summary'],
     keepalive: ['install', 'status', 'uninstall'],
-    merchant: ['status', 'sync', 'list', 'summary', 'balance', 'today', 'query', 'trade'],
+    merchant: ['status', 'sync', 'list', 'summary', 'balance', 'today', 'receipts', 'query', 'trade'],
   };
   if (!first) throw usage('no command given');
   if (groupCommands[first]) {

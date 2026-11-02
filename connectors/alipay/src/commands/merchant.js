@@ -6,7 +6,8 @@ const { CliError, codes } = require('../errors');
 const { loadAll, loadKind, readCoverage, merchantLayout } = require('../merchant/store');
 const { syncBills, queryOnline, detail } = require('../merchant/engine');
 const { readConfig } = require('../merchant/client');
-const { ensureDir } = require('../util');
+const { ensureDir, shanghaiToday, addDays } = require('../util');
+const { acquireLock } = require('../lock');
 
 function moneyAdd(a, b) {
   return (Number(a) + Number(b)).toFixed(2);
@@ -44,16 +45,21 @@ async function sync(ctx) {
   const kinds = kind === 'both' ? ['signcustomer', 'trade'] : [String(kind)];
   if (kinds.some((k) => !['signcustomer', 'trade'].includes(k))) throw new CliError(codes.BAD_INPUT, `unsupported --kind: ${kind}`);
   ensureDir(merchantLayout(ctx.home).dir, 0o700);
-  const res = await syncBills({
-    home: ctx.home,
-    from: String(from),
-    to: String(to),
-    kinds,
-    refresh: !!refresh,
-    concurrency: Number(concurrency) || 4,
-    log: ctx.log,
-  });
-  return { cmd: 'merchant.sync', data: res };
+  const lock = acquireLock(ctx.home, { cmd: 'merchant sync' });
+  try {
+    const res = await syncBills({
+      home: ctx.home,
+      from: String(from),
+      to: String(to),
+      kinds,
+      refresh: !!refresh,
+      concurrency: Number(concurrency) || 4,
+      log: ctx.log,
+    });
+    return { cmd: 'merchant.sync', data: res };
+  } finally {
+    lock.release();
+  }
 }
 
 function toCents(s) {
@@ -121,16 +127,14 @@ async function trade(ctx) {
 }
 
 /**
- * Everything that landed since the last archived day, from the live APIs, plus a
- * balance check against the archive. Bills are T+1; `query` is the only same-day
- * source, so "did X pay me today" must start here, not at `list`.
+ * Partial live evidence only. Incoming friend transfers can instead appear as
+ * "其它/转账" in T+1 funds bills; use merchant receipts for payment checks.
  */
 async function today(ctx) {
   const funds = loadKind(ctx.home, 'funds').records;
   const lastFund = funds.length ? funds[funds.length - 1] : null;
-  const beijing = (d) => new Date(d.getTime() + 8 * 3600000).toISOString().slice(0, 10);
-  const day = ctx.flags.from ? String(ctx.flags.from) : beijing(new Date());
-  const next = beijing(new Date(Date.parse(`${day}T00:00:00Z`) + 86400000 - 8 * 3600000 + 86400000));
+  const day = ctx.flags.from ? String(ctx.flags.from) : shanghaiToday();
+  const next = addDays(shanghaiToday(), 1);
   const sells = (await queryOnline({ kind: 'sell', from: day, to: next })).records;
   const moves = {};
   for (const k of ['transfer', 'deposit', 'withdraw']) moves[k] = (await queryOnline({ kind: k, from: day, to: next })).records;
@@ -143,6 +147,7 @@ async function today(ctx) {
     cmd: 'merchant.today',
     data: {
       date: day,
+      coverage: { from: day, to_exclusive: next, complete: false, note: 'Partial live APIs only; incoming friend transfers may require T+1 funds bills. Use merchant receipts to fill archive gaps.' },
       archived_through: archivedThrough,
       latest_sell_at: sells.reduce((m, r) => (r.gmt_pay > m ? r.gmt_pay : m), ''),
       sells: sells.map((r) => ({ paid_at: r.gmt_pay, amount: r.total_amount, payer: r.other_account, order: r.merchant_order_no, title: r.goods_title, status: r.trade_status })),

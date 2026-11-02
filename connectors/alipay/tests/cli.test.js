@@ -191,3 +191,10 @@ test('MCP stdio server answers initialize and tools/list', () => {
   const summary = JSON.parse(replies[2].result.content[0].text);
   assert.equal(summary.totals.matched, 2);
 });
+
+test('merchant receipts routes and validates before accessing the live account', () => {
+  const home = tempHome();
+  const res = run(home, ['merchant', 'receipts', '--amount', 'not-money'], { expectOk: false });
+  assert.equal(res.status, 1);
+  assert.equal(JSON.parse(res.stderr).error.code, 'bad_input');
+});
