@@ -5,6 +5,7 @@ const { GatewayClient } = require('./client');
 const { parseBillZip, planPeriods, periodBounds } = require('./bills');
 const { mergeKind, saveRaw, setCoverage, readCoverage } = require('./store');
 const { CliError, codes } = require('../errors');
+const { shanghaiToday } = require('../util');
 
 const BILL = 'alipay.data.dataservice.bill.downloadurl.query';
 const METHOD = {
@@ -27,8 +28,10 @@ function classifyBill(result) {
 
 async function syncPeriod({ home, client, kind, period, refresh, coverage }) {
   const key = `${kind}|${period}`;
-  const prior = coverage[key];
-  if (!refresh && prior && ['downloaded', 'no_bill', 'before_registration'].includes(prior.status)) {
+  const month = /^\d{4}-\d{2}-\d{2}$/.test(period) ? coverage[`${kind}|${period.slice(0, 7)}`] : null;
+  const prior = month?.status === 'downloaded' ? month : coverage[key];
+  // A not-yet-generated T+1 bill is not a permanent empty day.
+  if (!refresh && prior && ['downloaded', 'before_registration'].includes(prior.status)) {
     return { kind, period, status: 'cached', rows: prior.rows || 0 };
   }
   const result = await client.call(BILL, { bill_type: kind, bill_date: period });
@@ -64,12 +67,11 @@ async function pool(items, concurrency, worker) {
 
 /**
  * Archive bills for [from, to) in Beijing dates. `to` must not be later than
- * yesterday (offline bills are T+1). Monthly periods are tried first and fall
+ * today (end exclusive; offline bills are T+1). Monthly periods are tried first and fall
  * back to day-by-day when the provider says the period type is unsupported.
  */
-async function syncBills({ home, client = new GatewayClient(), from, to, kinds = ['signcustomer', 'trade'], refresh = false, concurrency = 4, log = () => {}, today = new Date().toISOString().slice(0, 10) }) {
+async function syncBills({ home, client = new GatewayClient(), from, to, kinds = ['signcustomer', 'trade'], refresh = false, concurrency = 4, log = () => {}, today = shanghaiToday() }) {
   if (!from || !to) throw new CliError(codes.BAD_INPUT, 'merchant sync needs --from and --to (Beijing dates, end exclusive)');
-  const yesterday = new Date(Date.parse(`${today}T00:00:00Z`) - 86400000).toISOString().slice(0, 10);
   if (to > today) throw new CliError(codes.BAD_INPUT, `offline bills are T+1; --to must be ${today} or earlier`, { to, today });
   if (from >= to) throw new CliError(codes.BAD_INPUT, '--from must be earlier than --to');
 

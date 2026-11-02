@@ -21,6 +21,16 @@
 | 「登录过期了」 | 让真人在弹出的 Chrome 里扫码：`auth login` |
 | 「环境有问题/查不了」 | `doctor`，把 `checks` 里 `fail`/`warn` 项原样贴出来 |
 
+## 代理/好友付款核对（商家账号）
+
+第一条用 `alipay merchant receipts --amount 金额 [--q 脱敏付款人或账号片段]`。
+默认近30个北京日，先补缺失的 T+1 商家资金账单（含「其它/转账」），再查当天实时证据；
+`--from/--to` 是北京日期、前闭后开。具体判读见
+[alipay-bills Skill](../skills/alipay-bills/SKILL.md#这个代理付钱了吗--好友转账--到账没--merchant-receipts)。
+`archive.complete` 和 `missing_days` 表示档案覆盖，`live.complete=false` 表示实时接口
+不能证明全部好友转入；没查到不能断言没付。`latest_sell_at` 不是覆盖截止时间。
+这条商家路径不需要浏览器或手机，下面的扫码/限流规则仅用于个人网页同步。
+
 ## 2. 推荐调用顺序
 
 ```bash
