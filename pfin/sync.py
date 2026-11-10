@@ -122,7 +122,10 @@ def plist(interval=600):
  root=Path(__file__).resolve().parents[1]
  path=':'.join(dict.fromkeys([str(Path(sys.executable).parent),str(Path.home()/'.local/bin'),'/opt/homebrew/bin','/usr/local/bin','/usr/bin','/bin','/usr/sbin','/sbin']))
  log=str(Path.home()/'Library/Logs/pfin-sync.log')
- return {'Label':LABEL,'ProgramArguments':[sys.executable,'-m','pfin','sync','--json'],'WorkingDirectory':str(root),
+ args=[sys.executable,'-m','pfin','sync','--json']
+ agent_run=Path(os.environ.get('AGENT_RUN','~/.local/bin/agent-run')).expanduser()
+ if agent_run.is_file() and os.access(agent_run,os.X_OK):args.insert(0,str(agent_run))
+ return {'Label':LABEL,'ProgramArguments':args,'WorkingDirectory':str(root),
   'EnvironmentVariables':{'PATH':path,'PYTHONUNBUFFERED':'1'},'StartInterval':int(interval),'RunAtLoad':True,
   'ProcessType':'Background','LowPriorityIO':True,'StandardOutPath':log,'StandardErrorPath':log}
 
