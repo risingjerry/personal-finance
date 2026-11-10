@@ -1,4 +1,4 @@
-import json,sys,unittest
+import json,os,plistlib,sys,tempfile,unittest
 from pathlib import Path
 from unittest import mock
 import _env
@@ -28,6 +28,23 @@ class SyncTests(unittest.TestCase):
 
  def test_one_job_retires_the_old_ones(self):
   self.assertEqual(sync.plist()['ProgramArguments'][-2:],['sync','--json'])
+
+
+class InstallTests(unittest.TestCase):
+ def test_optional_agent_run_preserves_the_rest_of_the_job(self):
+  with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, {'HOME':tmp}, clear=True), \
+       mock.patch.object(sync.subprocess,'run',side_effect=AssertionError('no launchctl in dry run')):
+   def render():return plistlib.loads(sync.install(dry_run=True).encode())
+   original=render()
+   self.assertEqual(original['ProgramArguments'],[sys.executable,'-m','pfin','sync','--json'])
+   for name,override in (('.local/bin/agent-run',None),('custom & <runner>','~/custom & <runner>')):
+    launcher=Path(tmp)/name;launcher.parent.mkdir(parents=True,exist_ok=True)
+    if override:os.environ['AGENT_RUN']=override
+    for mode in (None,0o644,0o755):
+     with self.subTest(name=name,mode=mode):
+      if mode is not None:launcher.write_text('#!/bin/sh\nexit 0\n');launcher.chmod(mode)
+      expected=dict(original,ProgramArguments=([str(launcher)] if mode==0o755 else [])+original['ProgramArguments'])
+      self.assertEqual(render(),expected)
 
 
 FOUND={'jd':{'module':'connectors.jd','path':'/x','manifest':{'keepalive_hours':1}},'alipay':{'module':'connectors.alipay','path':'/x','manifest':{'keepalive_hours':24}}}
